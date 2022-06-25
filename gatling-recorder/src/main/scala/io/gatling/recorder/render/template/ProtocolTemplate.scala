@@ -66,12 +66,19 @@ private[render] class ProtocolTemplate(config: RecorderConfiguration) {
       def quotedStringList(xs: Seq[String]): String =
         xs.map(_.protect(format)).mkString(", ")
 
-      def denyListPatterns = s"DenyList(${quotedStringList(filtersConfig.denyList.patterns)})"
-      def allowListPatterns = s"AllowList(${quotedStringList(filtersConfig.allowList.patterns)})"
-
       val patterns =
         if (filtersConfig.enabled) {
-          s"$allowListPatterns, $denyListPatterns"
+          if (filtersConfig.allowList.patterns.nonEmpty) {
+            if (filtersConfig.denyList.patterns.nonEmpty) {
+              s"AllowList(${quotedStringList(filtersConfig.allowList.patterns)}), DenyList(${quotedStringList(filtersConfig.denyList.patterns)})"
+            } else {
+              s"AllowList(${quotedStringList(filtersConfig.allowList.patterns)})"
+            }
+          } else if (filtersConfig.denyList.patterns.nonEmpty) {
+            s"DenyList(${quotedStringList(filtersConfig.denyList.patterns)})"
+          } else {
+            ""
+          }
         } else {
           ""
         }
